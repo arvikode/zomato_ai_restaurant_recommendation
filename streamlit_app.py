@@ -7,34 +7,196 @@ import time
 import sys
 
 # Configuration
-# Default to localhost if env var not set. 
-# In Streamlit Cloud, this won't be reachable, so we will fallback to Standalone.
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(
-    page_title="AI Restaurant Recommender",
+    page_title="AI Restaurant Guide",
     page_icon="🍽️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for better aesthetics
-st.markdown("""
+# --- CUSTOM CSS ---
+STYLING = """
 <style>
-    .stButton>button {
-        width: 100%;
-        margin-top: 20px;
-    }
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 15px;
-        border-radius: 10px;
-        text-align: center;
-    }
-</style>
-""", unsafe_allow_html=True)
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-st.title("🍽️ AI Restaurant Recommender")
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #13131f;
+  --bg-card: rgba(30, 30, 40, 0.6);
+  --bg-card-hover: rgba(40, 40, 50, 0.8);
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --accent-primary: #6366f1;
+  --accent-secondary: #ec4899;
+  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+  --success: #10b981;
+  --error: #ef4444;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Base Overrides */
+.stApp {
+    background-color: var(--bg-primary);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15) 0%, transparent 25%);
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3 {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Gradient Heading */
+.heading-gradient {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.subheading {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+/* Input Containers */
+.stSelectbox, .stSlider {
+    background: transparent;
+}
+
+div[data-baseweb="select"] > div {
+    background-color: rgba(30, 30, 40, 0.6) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+
+div[data-testid="stMarkdownContainer"] p {
+    color: var(--text-secondary);
+}
+
+/* Buttons */
+div.stButton > button {
+    background: var(--accent-gradient) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    transition: transform 0.2s !important;
+}
+div.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+div.stButton > button:active {
+    color: white !important;
+}
+
+div.stButton > button:focus {
+    color: white !important;
+    box-shadow: none !important;
+}
+
+/* Custom Cards (HTML) */
+.restaurant-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--glass-shadow);
+    transition: transform 0.2s;
+    height: 100%;
+}
+
+.restaurant-card:hover {
+    transform: translateY(-4px);
+    background: var(--bg-card-hover);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.rank-badge {
+    background: var(--accent-gradient);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card-meta {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.rating-badge {
+    color: var(--success);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.price-tag {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.reason-box {
+    background: rgba(99, 102, 241, 0.1);
+    border-left: 3px solid var(--accent-primary);
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    margin-top: 1rem;
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Streamlit Overrides to Hide Default Elements */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+"""
+
+st.markdown(STYLING, unsafe_allow_html=True)
 
 # --- INITIALIZATION & MODE CHECK ---
 
@@ -63,19 +225,13 @@ is_api_live = check_api_server(API_URL)
 USE_STANDALONE = not is_api_live
 
 if USE_STANDALONE:
-    st.markdown("""
-    **Status:** 🟢 Running in **Standalone Mode** (Serverless).
-    """)
     # Initialize DB (only runs once thanks to cache_resource)
     try:
         init_standalone_backend()
     except Exception as e:
         st.error(f"Failed to initialize standalone backend: {e}")
         st.stop()
-else:
-    st.markdown(f"""
-    **Status:** 🟢 Connected to Backend API at `{API_URL}`.
-    """)
+
 
 # --- LOGIC WRAPPERS ---
 
@@ -155,34 +311,45 @@ def get_recommendations_wrapper(city, price_category, limit):
 
 # --- APP INTERFACE ---
 
-# Sidebar for controls
-st.sidebar.header("🔍 Preferences")
+# Header
+st.markdown('<div class="heading-gradient">AI Restaurant Guide</div>', unsafe_allow_html=True)
+st.markdown('<div class="subheading">Discover the perfect dining spot with AI-powered recommendations tailored to your taste and budget.</div>', unsafe_allow_html=True)
 
-cities_list = get_cities_wrapper()
+# Helper for layout
+def space(n):
+    for _ in range(n):
+        st.write("")
 
-if not cities_list:
-    if USE_STANDALONE:
-        st.error("No cities found in database. Please check logs.")
-    else:
-        st.warning(f"Connected to backend, but no cities found at {API_URL}.")
-    # Don't stop entirely, let user see UI
-    selected_city = "No Cities Available"
-else:
-    selected_city = st.sidebar.selectbox("📍 Select City", cities_list)
+# Search Container
+with st.container():
+    # We use columns to center the search box somewhat, or just full width
+    col_input1, col_input2, col_input3 = st.columns([1, 1, 1])
+    
+    cities_list = get_cities_wrapper()
+    if not cities_list:
+        cities_list = ["No Cities Available"]
+        
+    with col_input1:
+        st.markdown("**Select City**")
+        selected_city = st.selectbox("Select City", cities_list, label_visibility="collapsed")
+        
+    with col_input2:
+        st.markdown("**Price Range**")
+        price_map = {"Cheap ($)": "$", "Moderate ($$)": "$$", "Expensive ($$$)": "$$$"}
+        selected_price_label = st.selectbox("Price Range", list(price_map.keys()), index=1, label_visibility="collapsed")
+        price_category = price_map[selected_price_label]
+        
+    with col_input3:
+        st.markdown("**Recommendations**")
+        limit = st.slider("Number of Results", min_value=3, max_value=12, value=3,  label_visibility="collapsed")
 
-price_map = {"Cheap ($)": "$", "Moderate ($$)": "$$", "Expensive ($$$)": "$$$"}
-selected_price_label = st.sidebar.selectbox("💰 Price Range", list(price_map.keys()), index=1)
-price_category = price_map[selected_price_label]
-
-limit = st.sidebar.slider("🔢 Number of Results", min_value=3, max_value=10, value=3)
-
-if st.sidebar.button("✨ Get Recommendations", type="primary"):
-    if not selected_city or selected_city == "No Cities Available":
-        st.error("Please select a valid city.")
-    else:
-        with st.spinner("🤖 Asking the AI for the best spots..."):
-            start_time = time.time()
-            try:
+    space(1)
+    
+    if st.button("✨ Get Recommendations"):
+        if not selected_city or selected_city == "No Cities Available":
+            st.error("Please select a valid city.")
+        else:
+            with st.spinner("🤖 Asking the AI for the best spots..."):
                 response = get_recommendations_wrapper(selected_city, price_category, limit)
                 
                 if response.status_code == 200:
@@ -190,43 +357,49 @@ if st.sidebar.button("✨ Get Recommendations", type="primary"):
                     recs = data.get("recommendations", [])
                     
                     if recs:
-                        st.canvas = st.empty()
-                        st.success(f"Found {len(recs)} recommendations in {time.time() - start_time:.2f}s!")
+                        st.markdown(f"### Found {len(recs)} Top Picks")
                         
-                        for i, rec in enumerate(recs, 1):
-                            with st.container():
-                                st.markdown(f"### #{rec.get('rank', i)} {rec.get('name')}")
+                        # Grid Layout for Cards
+                        # We will render rows of 3 columns
+                        
+                        cols = st.columns(3)
+                        for i, rec in enumerate(recs):
+                            col = cols[i % 3]
+                            with col:
+                                delivery_icon = "✅" if (rec.get('has_online_delivery') or rec.get('online_order')) else "❌"
+                                delivery_text = "Online Delivery Available" if (rec.get('has_online_delivery') or rec.get('online_order')) else "No Online Delivery"
+                                # CSS class can't be used easily inside standard widgets, but we use HTML card
                                 
-                                col1, col2, col3 = st.columns([1, 2, 1])
-                                
-                                with col1:
-                                    st.metric("Rating", f"{rec.get('rating', 'N/A')} ⭐")
-                                    st.caption(f"Cost: ₹{rec.get('cost_for_two', 'N/A')}")
-                                    
-                                with col2:
-                                    st.markdown(f"**Location:** {rec.get('location')}")
-                                    st.info(f"💡 {rec.get('reason')}")
-                                    
-                                with col3:
-                                    if rec.get('has_online_delivery') or rec.get('online_order'):
-                                        st.success("✅ Delivery")
-                                    else:
-                                        st.warning("❌ Dine-in Only")
-                                        
-                                st.divider()
+                                html_card = f"""
+                                <div class="restaurant-card">
+                                    <div class="card-header">
+                                        <div style="display:flex; align-items:center;">
+                                            <div class="rank-badge">{rec.get('rank', i+1)}</div>
+                                            <div>
+                                                <h3 class="card-title">{rec.get('name')}</h3>
+                                                <div class="card-meta">📍 {rec.get('location')}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                                        <div class="rating-badge">★ {rec.get('rating', 'N/A')} / 5</div>
+                                        <div class="price-tag">₹{rec.get('cost_for_two', 'N/A')} for two</div>
+                                    </div>
+                                    <div class="card-meta" style="margin-top:8px; font-size:0.85rem;">
+                                        {delivery_icon} {delivery_text}
+                                    </div>
+                                    <div class="reason-box">
+                                        "{rec.get('reason')}"
+                                    </div>
+                                </div>
+                                """
+                                st.markdown(html_card, unsafe_allow_html=True)
                     else:
                         st.warning("No recommendations found. Try adjusting criteria.")
                 else:
-                    detail = "Error"
-                    try:
-                        detail = response.json().get("detail", response.text)
-                    except:
-                        pass
-                    st.error(f"Error: {detail}")
-                    
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
+                    st.error(f"Error: {response.text}")
 
-# Footer
-st.sidebar.markdown("---")
-st.sidebar.markdown(f"Mode: **{'Standalone' if USE_STANDALONE else 'API'}**")
+# Debug / Footer info (small)
+st.markdown("---")
+mode_label = "Standalone Mode" if USE_STANDALONE else "API Mode"
+st.caption(f"Running in {mode_label} | Built with Streamlit & FastAPI")
