@@ -289,7 +289,8 @@ def get_recommendations_wrapper(city, price_category, limit):
             def __init__(self, data, status_code=200):
                 self._data = data
                 self.status_code = status_code
-                self.text = ""
+                import json
+                self.text = json.dumps(data)
                 
             def json(self):
                 return self._data
