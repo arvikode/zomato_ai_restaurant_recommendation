@@ -30,7 +30,7 @@ def _get_ollama_config() -> tuple[str, str]:
 def _get_gemini_config() -> tuple[str, str]:
     """Read Gemini config from environment."""
     api_key = os.getenv("GEMINI_API_KEY", "")
-    model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip()
+    model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
     return api_key, model
 
 
